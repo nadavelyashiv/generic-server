@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  emailVerified   Boolean   @default(false)
+  password        String?   // nullable for OAuth-only users
+  firstName       String
+  lastName        String
+  avatar          String?
+  googleId        String?   @unique
+  facebookId      String?   @unique
+  isActive        Boolean   @default(true)
+  lastLoginAt     DateTime?
+  emailVerificationToken String?
+  emailVerificationExpires DateTime?
+  passwordResetToken String?
+  passwordResetExpires DateTime?
+  roles           Role[]    @relation("UserRoles")
+  permissions     Permission[] @relation("UserPermissions")
+  refreshTokens   RefreshToken[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique // "admin", "user", "moderator"
+  description String?
+  isDefault   Boolean  @default(false)
+  users       User[]   @relation("UserRoles")
+  permissions Permission[] @relation("RolePermissions")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String @id @default(cuid())
+  name        String @unique // "read:users", "write:posts", "delete:comments"
+  resource    String // "users", "posts", "comments"
+  action      String // "read", "write", "delete", "update"
+  description String?
+  users       User[] @relation("UserPermissions")
+  roles       Role[] @relation("RolePermissions")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("permissions")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+  userAgent String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+  
+  @@map("refresh_tokens")
+}
+
+model BlacklistedToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  @@map("blacklisted_tokens")
+}
+
+model EmailTemplate {
+  id          String @id @default(cuid())
+  name        String @unique // "verification", "password_reset", "welcome"
+  subject     String
+  htmlContent String
+  textContent String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("email_templates")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  action      String   // "login", "logout", "password_change", "role_update"
+  resource    String?  // table/model name
+  resourceId  String?  // record id
+  oldValues   Json?
+  newValues   Json?
+  ipAddress   String?
+  userAgent   String?
+  success     Boolean  @default(true)
+  errorMessage String?
+  createdAt   DateTime @default(now())
+  
+  @@map("audit_logs")
+}
