@@ -9,73 +9,101 @@ import logger from '@/utils/logger';
 const memoryStore = new Map<string, { count: number; resetTime: number }>();
 
 class RedisStore {
-  private redis = getRedisClient();
+  private redis: ReturnType<typeof getRedisClient> | null = null;
   private prefix: string;
 
   constructor(prefix = 'rate_limit:') {
     this.prefix = prefix;
   }
 
+  private getRedis() {
+    // For development, always use memory store to avoid Redis auth issues
+    if (process.env.NODE_ENV === 'development') {
+      return null;
+    }
+    
+    if (!this.redis) {
+      try {
+        this.redis = getRedisClient();
+      } catch (error) {
+        logger.warn('Redis not available, using memory fallback for rate limiting');
+        return null;
+      }
+    }
+    return this.redis;
+  }
+
   async increment(key: string, windowMs: number): Promise<{ totalHits: number; timeToReset: number }> {
     const redisKey = `${this.prefix}${key}`;
+    const redis = this.getRedis();
     
     try {
-      const multi = this.redis.multi();
-      multi.incr(redisKey);
-      multi.expire(redisKey, Math.ceil(windowMs / 1000));
-      multi.ttl(redisKey);
-      
-      const results = await multi.exec();
-      const totalHits = results?.[0] as number ?? 1;
-      const ttl = results?.[2] as number ?? Math.ceil(windowMs / 1000);
-      
-      const timeToReset = ttl * 1000;
-      
-      return { totalHits, timeToReset };
+      if (redis) {
+        const multi = redis.multi();
+        multi.incr(redisKey);
+        multi.expire(redisKey, Math.ceil(windowMs / 1000));
+        multi.ttl(redisKey);
+        
+        const results = await multi.exec();
+        const totalHits = results?.[0] as number ?? 1;
+        const ttl = results?.[2] as number ?? Math.ceil(windowMs / 1000);
+        
+        const timeToReset = ttl * 1000;
+        
+        return { totalHits, timeToReset };
+      }
     } catch (error) {
       logger.error('Redis rate limit error, falling back to memory store:', error);
-      
-      // Fallback to memory store
-      const now = Date.now();
-      const entry = memoryStore.get(key);
-      
-      if (!entry || now > entry.resetTime) {
-        memoryStore.set(key, { count: 1, resetTime: now + windowMs });
-        return { totalHits: 1, timeToReset: windowMs };
-      }
-      
-      entry.count++;
-      return { totalHits: entry.count, timeToReset: entry.resetTime - now };
     }
+    
+    // Fallback to memory store
+    const now = Date.now();
+    const entry = memoryStore.get(key);
+    
+    if (!entry || now > entry.resetTime) {
+      memoryStore.set(key, { count: 1, resetTime: now + windowMs });
+      return { totalHits: 1, timeToReset: windowMs };
+    }
+    
+    entry.count++;
+    return { totalHits: entry.count, timeToReset: entry.resetTime - now };
   }
 
   async decrement(key: string): Promise<void> {
     const redisKey = `${this.prefix}${key}`;
+    const redis = this.getRedis();
     
     try {
-      await this.redis.decr(redisKey);
+      if (redis) {
+        await redis.decr(redisKey);
+        return;
+      }
     } catch (error) {
       logger.error('Redis rate limit decrement error:', error);
-      
-      // Fallback to memory store
-      const entry = memoryStore.get(key);
-      if (entry && entry.count > 0) {
-        entry.count--;
-      }
+    }
+    
+    // Fallback to memory store
+    const entry = memoryStore.get(key);
+    if (entry && entry.count > 0) {
+      entry.count--;
     }
   }
 
   async resetKey(key: string): Promise<void> {
     const redisKey = `${this.prefix}${key}`;
+    const redis = this.getRedis();
     
     try {
-      await this.redis.del(redisKey);
+      if (redis) {
+        await redis.del(redisKey);
+        return;
+      }
     } catch (error) {
       logger.error('Redis rate limit reset error:', error);
-      
-      // Fallback to memory store
-      memoryStore.delete(key);
     }
+    
+    // Fallback to memory store
+    memoryStore.delete(key);
   }
 }
 

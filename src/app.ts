@@ -8,12 +8,15 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { config } from './config/environment';
 import { connectDatabase } from './config/database';
+import { connectRedis } from './config/redis';
 import './config/passport'; // Initialize passport strategies
 import logger from './utils/logger';
 import { errorHandler } from './middleware/errorHandler.middleware';
 
 // Import routes
 import authRoutes from './routes/auth.routes';
+import adminRoutes from './routes/admin.routes';
+import userRoutes from './routes/user.routes';
 
 const app = express();
 
@@ -65,6 +68,8 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/user', userRoutes);
 
 // Basic API endpoints
 app.post('/api/test', (req, res) => {
@@ -92,6 +97,13 @@ async function startServer() {
   try {
     // Connect to databases
     await connectDatabase();
+    
+    // Connect to Redis (optional)
+    try {
+      await connectRedis();
+    } catch (error) {
+      logger.warn('Redis connection failed, continuing without Redis (rate limiting will use memory store):', error);
+    }
 
     const port = config.server.port;
     app.listen(port, () => {

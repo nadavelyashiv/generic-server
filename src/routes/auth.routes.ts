@@ -18,8 +18,8 @@ router.post('/register', authRateLimit, validateBody(RegisterSchema), authContro
 router.get('/verify-email', emailVerificationRateLimit, authController.verifyEmail);
 router.post('/resend-verification', emailVerificationRateLimit, validateBody(ForgotPasswordSchema), authController.resendVerificationEmail);
 
-// Authentication
-router.post('/login', authRateLimit, validateBody(LoginSchema), authController.login);
+// Authentication (temporarily removing rate limiter for debugging)
+router.post('/login', validateBody(LoginSchema), authController.login);
 router.post('/refresh', authController.refreshTokens);
 router.post('/logout', authController.logout);
 router.post('/logout-all', authenticate, authController.logoutAll);

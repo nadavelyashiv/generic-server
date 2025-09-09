@@ -3,6 +3,7 @@ export interface ApiResponse<T = any> {
   message?: string;
   data?: T;
   errors?: string[];
+  timestamp?: string;
   meta?: {
     total?: number;
     page?: number;

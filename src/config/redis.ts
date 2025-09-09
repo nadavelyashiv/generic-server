@@ -1,11 +1,11 @@
-import Redis from 'redis';
+import { createClient } from 'redis';
 import logger from '@/utils/logger';
 import { config } from '@/config/environment';
 
-let redis: Redis.RedisClientType;
+let redis: ReturnType<typeof createClient>;
 
-export const createRedisClient = (): Redis.RedisClientType => {
-  const client = Redis.createClient({
+export const createRedisClient = (): ReturnType<typeof createClient> => {
+  const client = createClient({
     url: config.redis.url,
     socket: {
       reconnectStrategy: (retries: number) => {
@@ -47,8 +47,9 @@ export const connectRedis = async (): Promise<void> => {
       await redis.connect();
     }
   } catch (error) {
-    logger.error('Failed to connect to Redis:', error);
-    throw error;
+    logger.warn('Failed to connect to Redis (continuing without Redis):', error);
+    // Don't throw error - allow app to continue without Redis
+    redis = null;
   }
 };
 
@@ -63,9 +64,9 @@ export const disconnectRedis = async (): Promise<void> => {
   }
 };
 
-export const getRedisClient = (): Redis.RedisClientType => {
+export const getRedisClient = (): ReturnType<typeof createClient> => {
   if (!redis) {
-    throw new Error('Redis client not initialized. Call connectRedis() first.');
+    throw new Error('Redis client not available.');
   }
   return redis;
 };

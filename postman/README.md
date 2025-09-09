@@ -1,228 +1,234 @@
-# Authentication Server - Postman Collection
+# Node.js Authentication Server - Postman Collection
 
-This directory contains comprehensive Postman collections and environments for testing the Node.js Authentication Server API.
+This directory contains comprehensive Postman collections and environments for testing the Node.js Authentication Server API with full admin and user management capabilities.
 
-## 📁 Files
+## 📋 Files Overview
 
-- `Auth-Server-API.postman_collection.json` - Complete API collection with all endpoints
-- `Auth-Server-Development.postman_environment.json` - Development environment variables
-- `Auth-Server-Production.postman_environment.json` - Production environment template
+- **`Auth-Server-API.postman_collection.json`** - Complete API collection (v2.0.0)
+- **`Auth-Server-Development.postman_environment.json`** - Development environment (localhost:3000)
+- **`Auth-Server-Production.postman_environment.json`** - Production environment template
+- **`IMPORT_GUIDE.md`** - Step-by-step import instructions
 
 ## 🚀 Quick Start
 
-### 1. Import into Postman
+1. Import the collection and environment files into Postman
+2. Select the "Auth Server - Development" environment
+3. Start with the "Login User" request to get authentication tokens
+4. All subsequent requests will automatically use the stored access token
 
-1. **Import Collection:**
-   - Open Postman
-   - Click "Import" → "File" 
-   - Select `Auth-Server-API.postman_collection.json`
+## 📚 API Endpoints
 
-2. **Import Environment:**
-   - Click "Import" → "File"
-   - Select `Auth-Server-Development.postman_environment.json`
-
-3. **Select Environment:**
-   - In Postman, select "Auth Server - Development" from the environment dropdown
-
-### 2. Test Your Server
-
-1. **Health Check:**
-   - Run "Server Health Check" to verify your server is running
-   - Expected: `200 OK` with server status
-
-2. **Admin Login:**
-   - Run "Admin Login" with default credentials
-   - Expected: `200 OK` with access token (auto-saved to environment)
-
-3. **Test API:**
-   - Run "API Test Endpoint" to verify basic functionality
-   - Expected: `200 OK` with echo response
-
-## 📋 Collection Structure
-
-### 🏥 Health Check
-- **Server Health Check** - Verify server status
-- **API Test Endpoint** - Test basic API functionality
+### 🔍 Health Check
+- **GET** `/health` - Server health status
 
 ### 🔐 Authentication
-- **User Registration** - Register new users
-- **User Login** - Standard email/password login
-- **Admin Login** - Login with admin credentials
-- **Refresh Token** - Refresh access tokens
-- **Email Verification** - Verify email addresses
-- **Resend Verification Email** - Resend verification
-- **Forgot Password** - Request password reset
-- **Reset Password** - Reset password with token
-- **Change Password** - Change password (authenticated)
-- **Logout** - Single session logout
-- **Logout All Sessions** - Multi-device logout
+- **POST** `/api/auth/register` - Register new user
+- **POST** `/api/auth/login` - Login with credentials
+- **POST** `/api/auth/refresh` - Refresh access token
+- **POST** `/api/auth/logout` - Logout (invalidate refresh token)
+- **POST** `/api/auth/logout-all` - Logout from all devices *(requires auth)*
+
+### 🔑 Password Management
+- **POST** `/api/auth/forgot-password` - Send password reset email
+- **POST** `/api/auth/reset-password` - Reset password with token
+- **POST** `/api/auth/change-password` - Change password *(requires auth)*
+
+### 📧 Email Verification
+- **GET** `/api/auth/verify-email` - Verify email with token
+- **POST** `/api/auth/resend-verification` - Resend verification email
 
 ### 🌐 OAuth Authentication
-- **Google OAuth Initiate** - Start Google OAuth flow
-- **Google OAuth Callback** - Handle Google callback
-- **Facebook OAuth Initiate** - Start Facebook OAuth flow  
-- **Facebook OAuth Callback** - Handle Facebook callback
+- **GET** `/api/auth/google` - Google OAuth flow
+- **GET** `/api/auth/facebook` - Facebook OAuth flow
 
-### 👤 User Management
-- **Get User Profile** - Get current user data
-- **Update User Profile** - Update profile information
-- **Delete User Account** - Delete current account
-- **Get User by ID** - Get specific user (admin/self)
+### 👤 User Profile Management *(requires auth)*
+- **GET** `/api/user/profile` - Get current user profile
+- **PATCH** `/api/user/profile` - Update user profile
+- **PATCH** `/api/user/password` - Change user password
+- **DELETE** `/api/user/account` - Delete user account
 
-### 👑 Admin - User Management
-- **List All Users** - Paginated user list
-- **Search Users** - Filter and search users
-- **Update User Status** - Enable/disable accounts
-- **Assign User Roles** - Manage user roles
-- **Assign User Permissions** - Manage user permissions
+### 🛡️ Admin - User Management *(requires admin/moderator role)*
+- **GET** `/api/admin/users` - Get all users (with pagination & filtering)
+- **GET** `/api/admin/users/:id` - Get user by ID
+- **PATCH** `/api/admin/users/:id` - Update user *(admin only)*
+- **PATCH** `/api/admin/users/:id/status` - Update user status *(admin only)*
+- **PUT** `/api/admin/users/:id/roles` - Assign user roles *(admin only)*
+- **DELETE** `/api/admin/users/:userId/roles/:roleId` - Remove user role *(admin only)*
+- **DELETE** `/api/admin/users/:id` - Delete user *(admin only)*
 
-### 🛡️ Admin - Roles & Permissions
-- **List All Roles** - Get all system roles
-- **Create New Role** - Add new roles
-- **Update Role** - Modify existing roles
-- **Delete Role** - Remove roles
-- **List All Permissions** - Get all permissions
-- **Create New Permission** - Add new permissions
-- **Update Permission** - Modify permissions
-- **Delete Permission** - Remove permissions
+## 🔄 Auto-Token Management
 
-### 📊 Admin - Audit Logs
-- **Get Audit Logs** - System activity logs
-- **Get User Activity Logs** - User-specific logs
+The collection includes automatic token management:
 
-### 🗄️ Database Queries
-- **Check Database Tables** - List database tables
-- **Get Database Stats** - System statistics
+### Login Flow
+1. **Login User** request automatically stores `accessToken`, `refreshToken`, and `userId`
+2. All authenticated requests automatically use the stored `accessToken`
+3. **Refresh Tokens** request updates stored tokens
+4. **Get All Users** request stores `adminUserId` for admin operations
 
-## 🔑 Authentication Flow
+### Pre-request Scripts
+- Automatic Authorization header injection
+- Token validation and refresh logic
 
-The collection uses automatic token management:
-
-1. **Login:** Access tokens are automatically saved to environment variables
-2. **Authentication:** Most requests use Bearer token authentication
-3. **Token Refresh:** Use the refresh endpoint when tokens expire
-4. **Environment Variables:** Tokens persist across requests
+### Test Scripts
+- Automatic token extraction from responses
+- User ID capture for subsequent requests
+- Response validation
 
 ## 🌍 Environment Variables
 
-### Development Environment
-```
-baseUrl: http://localhost:3000
-adminEmail: admin@example.com
-adminPassword: admin123!
-```
-
-### Production Environment
-```
-baseUrl: https://your-auth-server.com
-adminEmail: admin@yourcompany.com
-adminPassword: [SET_YOUR_PASSWORD]
-```
-
-### Auto-Generated Variables
-- `accessToken` - JWT access token (auto-set on login)
-- `refreshToken` - JWT refresh token (auto-set on login)
-- `userId` - Current user ID (auto-set on login)
-
-## 🧪 Testing Workflow
-
-### 1. Basic API Testing
-```
-1. Health Check → API Test Endpoint
-2. Admin Login → Get User Profile
-3. List All Users → Get Database Stats
-```
-
-### 2. User Registration Flow
-```
-1. User Registration
-2. Email Verification (check logs for token)
-3. User Login
-4. Get User Profile
-```
-
-### 3. Authentication Testing
-```
-1. User Login → Change Password
-2. Logout → Login (with new password)
-3. Logout All Sessions
-```
-
-### 4. Admin Operations
-```
-1. Admin Login
-2. List All Users → Create New Role
-3. Create New Permission → Assign User Roles
-4. Get Audit Logs
-```
-
-## 🔧 Customization
-
-### Adding New Endpoints
-1. Create new request in appropriate folder
-2. Set authentication if required
-3. Add test scripts to save response data
-4. Update environment variables as needed
-
-### Environment Setup
-1. Duplicate development environment
-2. Update `baseUrl` for your server
-3. Set appropriate credentials
-4. Test with health check
-
-## 🚨 Security Notes
-
-- **Never commit production credentials**
-- **Use environment variables for sensitive data**
-- **Rotate access tokens regularly**
-- **Test with non-admin users for proper authorization**
-
-## 📝 API Response Format
-
-All API responses follow this format:
+### Development Environment (`localhost:3000`)
 ```json
 {
-  "success": true/false,
-  "message": "Description",
-  "data": { /* Response data */ },
-  "errors": [ /* Validation errors */ ],
-  "timestamp": "ISO date string"
+  "baseUrl": "http://localhost:3000",
+  "environment": "development",
+  "accessToken": "", // Auto-populated
+  "refreshToken": "", // Auto-populated
+  "userId": "", // Auto-populated
+  "adminUserId": "", // Auto-populated
+  "adminEmail": "admin@example.com",
+  "adminPassword": "admin123!",
+  "testUserEmail": "user@example.com",
+  "testUserPassword": "SecurePassword123!"
 }
 ```
 
-## 🐛 Troubleshooting
+### Production Environment
+```json
+{
+  "baseUrl": "https://your-auth-server.com",
+  "environment": "production",
+  // ... other variables (empty for security)
+}
+```
 
-### Common Issues
+## 🔧 Server Configuration
 
-1. **401 Unauthorized**
-   - Run admin login first
-   - Check if token expired (use refresh endpoint)
+The collection is configured for the current server setup:
 
-2. **403 Forbidden**  
-   - Verify user has required permissions
-   - Check if accessing admin-only endpoints
+### Recent Changes (v2.0.0)
+- ✅ **Redis Authentication Issues Fixed** - Rate limiting uses memory fallback in development
+- ✅ **New Admin Endpoints** - Complete user management API
+- ✅ **New User Profile Endpoints** - Self-service profile management
+- ✅ **RBAC Authorization** - Role-based access control implemented
+- ✅ **Auto Token Management** - Seamless authentication flow
+- ✅ **Comprehensive Filtering** - User search, pagination, and filtering
 
-3. **Connection Refused**
-   - Verify server is running on correct port
-   - Check baseUrl in environment
+### Server Status
+- **Port**: 3000
+- **Database**: PostgreSQL (connected)
+- **Redis**: Available with memory fallback
+- **Rate Limiting**: Memory-based in development
+- **Authentication**: JWT with refresh tokens
+- **Authorization**: Role-based access control
 
-4. **Database Errors**
-   - Ensure PostgreSQL is running
-   - Run database migrations if needed
+## 🧪 Testing Workflow
 
-### Debug Steps
-1. Check server logs
-2. Verify environment variables
-3. Test health endpoint first
-4. Use Postman Console for detailed logs
+### 1. Basic Authentication Test
+```
+1. Health Check → 200 OK
+2. Register User → 201 Created
+3. Login User → 200 OK (tokens stored)
+4. Get User Profile → 200 OK
+```
 
-## 🔄 Continuous Testing
+### 2. Admin Operations Test
+```
+1. Login as Admin → 200 OK
+2. Get All Users → 200 OK (adminUserId stored)
+3. Update User Status → 200 OK
+4. Assign User Roles → 200 OK
+```
 
-Set up Postman monitors to:
-- Run health checks regularly
-- Test critical authentication flows  
-- Validate admin operations
-- Monitor API performance
+### 3. Password Management Test
+```
+1. Forgot Password → 200 OK
+2. Change Password (authenticated) → 200 OK
+3. Login with New Password → 200 OK
+```
+
+## 🔒 Security Features
+
+- **JWT Authentication** with access/refresh token pattern
+- **Role-Based Access Control** (Admin, Moderator, User)
+- **Rate Limiting** with Redis/Memory fallback
+- **Password Hashing** with bcrypt
+- **Email Verification** workflow
+- **OAuth Integration** (Google, Facebook)
+- **Request Validation** with comprehensive schemas
+- **Error Handling** with proper HTTP status codes
+
+## 📝 Request Examples
+
+### Login Request
+```json
+POST /api/auth/login
+{
+  "email": "admin@example.com",
+  "password": "admin123!"
+}
+```
+
+### Admin Get Users Request
+```http
+GET /api/admin/users?page=1&limit=10&search=john&role=user&isActive=true
+Authorization: Bearer {{accessToken}}
+```
+
+### Update User Status Request
+```json
+PATCH /api/admin/users/:id/status
+Authorization: Bearer {{accessToken}}
+{
+  "isActive": false
+}
+```
+
+## 🚨 Error Handling
+
+The API returns consistent error responses:
+
+```json
+{
+  "success": false,
+  "message": "Error description",
+  "errorCode": "ERROR_TYPE",
+  "timestamp": "2025-09-09T14:37:00.000Z"
+}
+```
+
+## 📊 Response Format
+
+All successful responses follow this format:
+
+```json
+{
+  "success": true,
+  "message": "Operation successful",
+  "data": { ... },
+  "timestamp": "2025-09-09T14:37:00.000Z"
+}
+```
+
+## 🔄 Keeping Updated
+
+This collection will be automatically updated whenever:
+- New endpoints are added
+- Request/response schemas change
+- Authentication methods change
+- Environment configuration changes
+
+**Current Version**: 2.0.0 (Updated: September 9, 2025)
+
+## 🆘 Support
+
+If you encounter issues:
+1. Check server status at `http://localhost:3000/health`
+2. Verify environment selection in Postman
+3. Ensure authentication tokens are valid
+4. Check server logs for detailed error information
+
+For development support, refer to the server logs and ensure all dependencies are properly configured.
 
 ---
 
