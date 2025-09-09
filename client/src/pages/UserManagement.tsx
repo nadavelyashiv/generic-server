@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { userService, type UserListResponse, type UserSearchParams } from '@/services/user.service';
+import { userService, type UserSearchParams } from '@/services/user.service';
 import { 
   Users, 
   Search, 
@@ -32,11 +32,7 @@ export default function UserManagement() {
   const { hasPermission, hasRole } = useAuth();
   const limit = 10;
 
-  useEffect(() => {
-    fetchUsers();
-  }, [currentPage, searchTerm]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const params: UserSearchParams = {
@@ -49,12 +45,16 @@ export default function UserManagement() {
       setUsers(response.users);
       setTotalPages(response.totalPages);
       setTotal(response.total);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch users');
+    } catch (err) {
+      setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to fetch users');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleStatusToggle = async (userId: string, currentStatus: boolean) => {
     if (!hasPermission('users:write') && !hasRole('admin')) {
@@ -65,8 +65,8 @@ export default function UserManagement() {
     try {
       await userService.updateUserStatus(userId, { isActive: !currentStatus });
       await fetchUsers(); // Refresh the list
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update user status');
+    } catch (err) {
+      setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to update user status');
     }
   };
 

@@ -9,7 +9,7 @@ export const hasRole = (...requiredRoles: string[]) => {
         throw new AuthenticationError('User not authenticated');
       }
 
-      const userRoles = req.user.roles.map(role => role.name);
+      const userRoles = (req.user as any).roles.map((role: any) => role.name);
       const hasRequiredRole = requiredRoles.some(role => userRoles.includes(role));
 
       if (!hasRequiredRole) {
@@ -34,10 +34,10 @@ export const hasPermission = (...requiredPermissions: string[]) => {
       }
 
       // Get all user permissions (from roles and direct permissions)
-      const rolePermissions = req.user.roles.flatMap(role => 
-        role.permissions.map(permission => permission.name)
+      const rolePermissions = (req.user as any).roles.flatMap((role: any) => 
+        role.permissions.map((permission: any) => permission.name)
       );
-      const userPermissions = req.user.permissions.map(permission => permission.name);
+      const userPermissions = (req.user as any).permissions.map((permission: any) => permission.name);
       const allPermissions = [...new Set([...rolePermissions, ...userPermissions])];
 
       const hasRequiredPermission = requiredPermissions.some(permission => 
@@ -66,10 +66,10 @@ export const hasPermissionAny = (...requiredPermissions: string[]) => {
       }
 
       // Get all user permissions (from roles and direct permissions)
-      const rolePermissions = req.user.roles.flatMap(role => 
-        role.permissions.map(permission => permission.name)
+      const rolePermissions = (req.user as any).roles.flatMap((role: any) => 
+        role.permissions.map((permission: any) => permission.name)
       );
-      const userPermissions = req.user.permissions.map(permission => permission.name);
+      const userPermissions = (req.user as any).permissions.map((permission: any) => permission.name);
       const allPermissions = [...new Set([...rolePermissions, ...userPermissions])];
 
       const hasAnyPermission = requiredPermissions.some(permission => 
@@ -98,10 +98,10 @@ export const hasPermissionAll = (...requiredPermissions: string[]) => {
       }
 
       // Get all user permissions (from roles and direct permissions)
-      const rolePermissions = req.user.roles.flatMap(role => 
-        role.permissions.map(permission => permission.name)
+      const rolePermissions = (req.user as any).roles.flatMap((role: any) => 
+        role.permissions.map((permission: any) => permission.name)
       );
-      const userPermissions = req.user.permissions.map(permission => permission.name);
+      const userPermissions = (req.user as any).permissions.map((permission: any) => permission.name);
       const allPermissions = [...new Set([...rolePermissions, ...userPermissions])];
 
       const hasAllPermissions = requiredPermissions.every(permission => 
@@ -135,15 +135,15 @@ export const isOwnerOrHasPermission = (
       const resourceUserId = getResourceUserId(req);
       
       // Check if user is the owner of the resource
-      if (req.user.id === resourceUserId) {
+      if ((req.user as any).id === resourceUserId) {
         return next();
       }
 
       // Check if user has required permissions
-      const rolePermissions = req.user.roles.flatMap(role => 
-        role.permissions.map(permission => permission.name)
+      const rolePermissions = (req.user as any).roles.flatMap((role: any) => 
+        role.permissions.map((permission: any) => permission.name)
       );
-      const userPermissions = req.user.permissions.map(permission => permission.name);
+      const userPermissions = (req.user as any).permissions.map((permission: any) => permission.name);
       const allPermissions = [...new Set([...rolePermissions, ...userPermissions])];
 
       const hasRequiredPermission = requiredPermissions.some(permission => 
@@ -174,12 +174,12 @@ export const isSelfOrHasRole = (...requiredRoles: string[]) => {
       const targetUserId = req.params.id || req.params.userId;
       
       // Check if user is accessing their own resource
-      if (req.user.id === targetUserId) {
+      if ((req.user as any).id === targetUserId) {
         return next();
       }
 
       // Check if user has required roles
-      const userRoles = req.user.roles.map(role => role.name);
+      const userRoles = (req.user as any).roles.map((role: any) => role.name);
       const hasRequiredRole = requiredRoles.some(role => userRoles.includes(role));
 
       if (!hasRequiredRole) {

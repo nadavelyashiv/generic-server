@@ -1,4 +1,4 @@
-import { api, type ApiResponse, type User, type Role, type Permission } from '../lib/api';
+import { api, type ApiResponse, type User } from '../lib/api';
 
 export interface UserListResponse {
   users: User[];

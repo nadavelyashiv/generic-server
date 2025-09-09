@@ -99,7 +99,7 @@ const createRateLimiter = (options: {
     skipFailedRequests: options.skipFailedRequests || false,
     keyGenerator: (req: Request) => {
       // Use user ID if authenticated, otherwise use IP
-      return req.user?.id || req.ip;
+      return (req.user as any)?.id || req.ip;
     },
     store: {
       incr: async (key: string) => {

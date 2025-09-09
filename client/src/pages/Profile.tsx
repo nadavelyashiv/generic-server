@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,8 +77,8 @@ export default function Profile() {
       await refreshUser();
       setIsEditing(false);
       setSuccess('Profile updated successfully!');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update profile');
+    } catch (err) {
+      setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -107,8 +107,8 @@ export default function Profile() {
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setIsChangingPassword(false);
       setSuccess('Password changed successfully!');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to change password');
+    } catch (err) {
+      setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to change password');
     } finally {
       setLoading(false);
     }

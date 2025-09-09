@@ -34,7 +34,7 @@ export const createRedisClient = (): Redis.RedisClientType => {
     logger.info('Redis reconnecting...');
   });
 
-  return client;
+  return client as any;
 };
 
 export const connectRedis = async (): Promise<void> => {
