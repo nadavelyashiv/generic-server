@@ -83,6 +83,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
+    // Extract permissions from user roles and direct permissions
+    const rolePermissions = user.roles.flatMap(role =>
+      role.permissions.map(permission => permission.name)
+    );
+    const userPermissions = user.permissions.map(permission => permission.name);
+    const allPermissions = [...new Set([...rolePermissions, ...userPermissions])];
+
     const response: ApiResponse = {
       success: true,
       message: 'Login successful',
@@ -95,7 +102,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
           avatar: user.avatar,
           emailVerified: user.emailVerified,
           isActive: user.isActive,
-          roles: user.roles.map(role => role.name),
+          roles: user.roles.map(role => ({
+            id: role.id,
+            name: role.name,
+          })),
+          permissions: allPermissions,
         },
         accessToken: tokens.accessToken,
       },

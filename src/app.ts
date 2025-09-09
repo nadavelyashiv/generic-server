@@ -4,11 +4,13 @@ import helmet from 'helmet';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
+import swaggerUi from 'swagger-ui-express';
 import { v4 as uuidv4 } from 'uuid';
 
 import { config } from './config/environment';
 import { connectDatabase } from './config/database';
 import { connectRedis } from './config/redis';
+import swaggerSpecs from './config/swagger';
 import './config/passport'; // Initialize passport strategies
 import logger from './utils/logger';
 import { errorHandler } from './middleware/errorHandler.middleware';
@@ -56,13 +58,31 @@ app.use(compression());
 // Passport middleware
 app.use(passport.initialize());
 
+// Swagger UI Documentation
+const swaggerOptions = {
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Auth Server API Documentation',
+  swaggerOptions: {
+    persistAuthorization: true,
+    displayRequestDuration: true,
+    docExpansion: 'list',
+    filter: true,
+    showRequestHeaders: true,
+    tryItOutEnabled: true
+  }
+};
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, swaggerOptions));
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
     success: true,
     message: 'Server is healthy',
     timestamp: new Date().toISOString(),
-    version: '1.0.0',
+    version: '2.0.0',
+    documentation: '/api-docs'
   });
 });
 
