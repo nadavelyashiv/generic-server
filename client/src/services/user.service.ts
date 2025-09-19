@@ -67,12 +67,12 @@ class UserService {
   }
 
   async updateProfile(userData: UpdateUserRequest): Promise<User> {
-    const response = await api.put<ApiResponse<User>>('/api/users/profile', userData);
+    const response = await api.put<ApiResponse<User>>('/api/user/profile', userData);
     return response.data.data!;
   }
 
   async deleteAccount(): Promise<void> {
-    await api.delete('/api/users/profile');
+    await api.delete('/api/user/profile');
   }
 }
 

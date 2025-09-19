@@ -37,7 +37,7 @@ class AuthService {
   }
 
   async getCurrentUser(): Promise<User> {
-    const response = await api.get<ApiResponse<User>>('/api/users/profile');
+    const response = await api.get<ApiResponse<User>>('/api/user/profile');
     return response.data.data!;
   }
 

@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: auth_server_postgres
+    container_name: auth_server_postgres_dev
     environment:
       POSTGRES_DB: auth_server
       POSTGRES_USER: postgres
@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_dev:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -19,12 +19,12 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: auth_server_redis
+    container_name: auth_server_redis_dev
     command: redis-server --appendonly yes --requirepass redispassword
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
+      - redis_data_dev:/data
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 10s
@@ -34,19 +34,20 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: auth_server_app
+      dockerfile: Dockerfile.dev
+    container_name: auth_server_app_dev
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       DATABASE_URL: postgresql://postgres:password@postgres:5432/auth_server
       REDIS_URL: redis://:redispassword@redis:6379
-      JWT_ACCESS_SECRET: your-super-secret-jwt-access-key-change-this-in-production
-      JWT_REFRESH_SECRET: your-super-secret-jwt-refresh-key-change-this-in-production
+      JWT_ACCESS_SECRET: dev-access-secret-at-least-32-characters-long
+      JWT_REFRESH_SECRET: dev-refresh-secret-at-least-32-characters-long
       JWT_ACCESS_EXPIRES_IN: "12h"
       JWT_REFRESH_EXPIRES_IN: "7d"
-      SESSION_SECRET: your-super-secret-session-key-change-this-in-production
+      SESSION_SECRET: dev-session-secret-at-least-32-characters-long
       CORS_ORIGIN: "http://localhost:3000,http://localhost:5173"
       CLIENT_URL: "http://localhost:5173"
+      SERVER_URL: "http://localhost:3000"
     ports:
       - "3000:3000"
     depends_on:
@@ -55,9 +56,13 @@ services:
       redis:
         condition: service_healthy
     volumes:
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+      - ./.env:/app/.env
       - ./logs:/app/logs
+      - /app/node_modules  # Prevent overwriting node_modules
     restart: unless-stopped
 
 volumes:
-  postgres_data:
-  redis_data:
+  postgres_data_dev:
+  redis_data_dev:
