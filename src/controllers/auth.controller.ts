@@ -180,7 +180,7 @@ export const logoutAll = async (req: Request, res: Response, next: NextFunction)
     }
 
     const currentRefreshToken = req.cookies.refreshToken;
-    await authService.logoutAll((req.user as any).id, currentRefreshToken);
+    await authService.logoutAll((req.user as { id: string }).id, currentRefreshToken);
 
     // Clear refresh token cookie
     res.clearCookie('refreshToken');
@@ -233,7 +233,7 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
       throw new AuthenticationError('User not authenticated');
     }
 
-    await authService.changePassword((req.user as any).id, req.body);
+    await authService.changePassword((req.user as { id: string }).id, req.body);
 
     const response: ApiResponse = {
       success: true,
@@ -252,7 +252,7 @@ export const googleAuth = passport.authenticate('google', {
 });
 
 export const googleCallback = async (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate('google', { session: false }, async (error, user) => {
+  passport.authenticate('google', { session: false }, async (error: any, user: any) => {
     try {
       if (error) {
         logger.error('Google OAuth error:', error);
@@ -264,12 +264,12 @@ export const googleCallback = async (req: Request, res: Response, next: NextFunc
       }
 
       // Extract permissions and roles
-      const rolePermissions = user.roles.flatMap((role: any) =>
-        role.permissions.map((permission: any) => permission.name)
+      const rolePermissions = user.roles.flatMap((role: { permissions: { name: string }[] }) =>
+        role.permissions.map((permission: { name: string }) => permission.name)
       );
-      const userPermissions = user.permissions.map((permission: any) => permission.name);
+      const userPermissions = user.permissions.map((permission: { name: string }) => permission.name);
       const allPermissions = [...new Set([...rolePermissions, ...userPermissions])];
-      const roles = user.roles.map((role: any) => role.name);
+      const roles = user.roles.map((role: { name: string }) => role.name);
 
       // Generate tokens
       const tokens = await tokenService.generateTokenPair(
@@ -317,12 +317,12 @@ export const facebookCallback = async (req: Request, res: Response, next: NextFu
       }
 
       // Similar token generation logic as Google
-      const rolePermissions = user.roles.flatMap((role: any) =>
-        role.permissions.map((permission: any) => permission.name)
+      const rolePermissions = user.roles.flatMap((role: { permissions: { name: string }[] }) =>
+        role.permissions.map((permission: { name: string }) => permission.name)
       );
-      const userPermissions = user.permissions.map((permission: any) => permission.name);
+      const userPermissions = user.permissions.map((permission: { name: string }) => permission.name);
       const allPermissions = [...new Set([...rolePermissions, ...userPermissions])];
-      const roles = user.roles.map((role: any) => role.name);
+      const roles = user.roles.map((role: { name: string }) => role.name);
 
       const tokens = await tokenService.generateTokenPair(
         user.id,

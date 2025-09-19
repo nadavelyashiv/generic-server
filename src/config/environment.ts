@@ -47,8 +47,8 @@ const envSchema = z.object({
   AUTH_RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(5),
 
   // Application URLs
-  CLIENT_URL: z.string().url().default('http://localhost:3000'),
-  SERVER_URL: z.string().url().default('http://localhost:3001'),
+  CLIENT_URL: z.string().url().default('http://localhost:5173'),
+  SERVER_URL: z.string().url().default('http://localhost:3000'),
 
   // Email Verification
   EMAIL_VERIFICATION_EXPIRES_IN: z.string().default('24h'),
